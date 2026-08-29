@@ -91,4 +91,9 @@ public class WeatherController {
             return ResponseEntity.internalServerError().body("Chyba při zpracování: " + e.getMessage());
         }
     }
+    @GetMapping("/all")
+    public ResponseEntity<java.util.List<WeatherData>> getAllWeatherData() {
+        java.util.List<WeatherData> allData = weatherRepository.findAll();
+        return ResponseEntity.ok(allData);
+    }
 }
