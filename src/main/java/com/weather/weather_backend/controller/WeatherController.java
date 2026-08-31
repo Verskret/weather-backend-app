@@ -1,5 +1,6 @@
 package com.weather.weather_backend.controller;
 
+import com.weather.weather_backend.dto.WeatherStatsDto;
 import com.weather.weather_backend.model.WeatherData;
 import com.weather.weather_backend.repository.WeatherRepository;
 import com.google.genai.Client;
@@ -11,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.nio.file.Files;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @RestController
@@ -91,9 +93,47 @@ public class WeatherController {
             return ResponseEntity.internalServerError().body("Chyba při zpracování: " + e.getMessage());
         }
     }
+
     @GetMapping("/all")
     public ResponseEntity<java.util.List<WeatherData>> getAllWeatherData() {
         java.util.List<WeatherData> allData = weatherRepository.findAll();
         return ResponseEntity.ok(allData);
+    }
+
+    @GetMapping("/stats")
+    public WeatherStatsDto getStats(
+            @RequestParam("period") String period, // "day", "week", "month", "year"
+            @RequestParam("date") String dateStr   // např. "2026-08-31"
+    ) {
+        LocalDate date = LocalDate.parse(dateStr);
+        LocalDateTime start;
+        LocalDateTime end = date.atTime(23, 59, 59);
+
+        switch (period.toLowerCase()) {
+            case "week":
+                start = date.minusDays(6).atStartOfDay();
+                break;
+            case "month":
+                start = date.withDayOfMonth(1).atStartOfDay();
+                end = date.withDayOfMonth(date.lengthOfMonth()).atTime(23, 59, 59);
+                break;
+            case "year":
+                start = date.withDayOfYear(1).atStartOfDay();
+                end = date.withDayOfYear(date.lengthOfYear()).atTime(23, 59, 59);
+                break;
+            case "day":
+            default:
+                start = date.atStartOfDay();
+                break;
+        }
+
+        Object[] result = (Object[]) weatherRepository.getOutdoorStatsByPeriod(start, end);
+        
+        Double minTemp = (result != null && result[0] != null) ? (Double) result[0] : 0.0;
+        Double maxTemp = (result != null && result[1] != null) ? (Double) result[1] : 0.0;
+        Double avgTemp = (result != null && result[2] != null) ? (Double) result[2] : 0.0;
+        Double rain = (result != null && result[3] != null) ? (Double) result[3] : 0.0;
+
+        return new WeatherStatsDto(minTemp, maxTemp, avgTemp, rain, 1013.2);
     }
 }
