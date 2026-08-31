@@ -1,3 +1,5 @@
+package com.weather.weather_backend.dto;
+
 public class WeatherStatsDto {
     private Double minTempOutdoor;
     private Double maxTempOutdoor;
@@ -5,7 +7,6 @@ public class WeatherStatsDto {
     private Double totalRain;
     private Double avgPressure;
     
-    // Konstruktory, gettery a settery
     public WeatherStatsDto(Double minTempOutdoor, Double maxTempOutdoor, Double avgTempOutdoor, Double totalRain, Double avgPressure) {
         this.minTempOutdoor = minTempOutdoor;
         this.maxTempOutdoor = maxTempOutdoor;
